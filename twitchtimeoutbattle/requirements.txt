@@ -1,3 +1,4 @@
 twitchAPI
 python-dotenv
 SQLAlchemy
+Flask

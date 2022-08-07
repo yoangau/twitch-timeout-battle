@@ -34,3 +34,5 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin"
 RUN brew install twitchdev/twitch/twitch-cli 
+RUN mkdir /workspace
+WORKDIR /workspace

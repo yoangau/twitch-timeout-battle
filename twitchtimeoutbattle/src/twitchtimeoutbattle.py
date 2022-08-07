@@ -1,6 +1,8 @@
-from twitchAPI import EventSub, Twitch, CustomRewardRedemptionStatus
-from random import randint
 import requests
+from src.dbservice import DBService
+from src.entities.unoreverse import UnoReverse
+from random import randint
+from twitchAPI import EventSub, Twitch, CustomRewardRedemptionStatus
 
 
 class TwitchTimeoutBattle:
@@ -11,10 +13,11 @@ class TwitchTimeoutBattle:
     __fullfilled = CustomRewardRedemptionStatus.FULFILLED
     __canceled = CustomRewardRedemptionStatus.CANCELED
 
-    def __init__(self, twitch_api: Twitch, twitch_hook: EventSub, moderator_id: str):
+    def __init__(self, db_service: DBService, twitch_api: Twitch, twitch_hook: EventSub, moderator_id: str):
         self.__twitch_hook = twitch_hook
         self.__twitch_api = twitch_api
         self.__moderator_id = moderator_id
+        self.__db_service = db_service
 
     def subscribe(self, broadcaster_user_id):
         self.unsubscribe()
@@ -44,10 +47,22 @@ class TwitchTimeoutBattle:
 
     def __uno_reverse(self, data):
         broadcaster_id, reward_id, user_id, user_name = self.__parse_data(data)
-        print("add to db", broadcaster_id,
-              reward_id, user_id, user_name)  # todo
+
+        uno_reverse = self.__db_service.get_uno_reverse_by_id(
+            broadcaster_id, user_id)
+        if uno_reverse is None:
+            uno_reverse = UnoReverse(
+                broadcaster_id=broadcaster_id,
+                user_id=user_id,
+                user_name=user_name,
+                count=1)
+            self.__db_service.add_uno_reverse(uno_reverse)
+        else:
+            uno_reverse.count += 1
+            self.__db_service.update_uno_reverse(uno_reverse)
+
         self.__twitch_api.update_redemption_status(
-            broadcaster_id, reward_id, [self.__roulette_reward_id], self.__fullfilled)
+            broadcaster_id, reward_id, [self.__uno_reverse_reward_id], self.__fullfilled)
 
     def __timeout_someone(self, data):
         broadcaster_id, reward_id, user_id, user_name = self.__parse_data(data)
@@ -61,21 +76,39 @@ class TwitchTimeoutBattle:
             self.__twitch_api.update_redemption_status(
                 broadcaster_id, reward_id, [self.__timeout_reward_id], self.__canceled)
             return
+        users = self.__twitch_api.get_users(logins=[targets[0]])["data"]
+        if not users:
+            self.__twitch_api.update_redemption_status(
+                broadcaster_id, reward_id, [self.__timeout_reward_id], self.__canceled)
+            return
+        defender_user = users[0]
+        defender_id = defender_user["id"]
+        defender_user_name = defender_user["login"]
 
-        attacker = user_id
-        defender = targets[0]
+        attacker = self.__db_service.get_uno_reverse_by_id(
+            broadcaster_id, user_id)
+        if attacker is None:
+            attacker = UnoReverse(broadcaster_id=broadcaster_id, user_id=user_id, user_name=user_name,
+                                  count=0)
+            self.__db_service.add_uno_reverse(attacker)
 
-        attacker_uno = 2  # todo
-        defender_uno = 1
+        defender = self.__db_service.get_uno_reverse_by_id(
+            broadcaster_id, defender_id)
 
-        min_uno = min(attacker_uno, defender_uno)
-        attacker_uno -= min_uno  # todo save new values to db
-        defender_uno -= min_uno
+        if defender is None:
+            defender = UnoReverse(broadcaster_id=broadcaster_id, user_id=defender_id, user_name=defender_user_name,
+                                  count=0)
+            self.__db_service.add_uno_reverse(defender)
 
-        loser, loser_uno = min(((defender, defender_uno), (attacker, attacker_uno)),
-                               key=lambda x: x[1])
+        min_uno = min(attacker.count, defender.count)
+        defender.count -= min_uno
+        attacker.count -= min_uno
+        self.__db_service.commit()
+
+        loser = min(defender, attacker,
+                    key=lambda ur: ur.count)
         self.__twitch_api.ban_user(
-            broadcaster_id, self.__moderator_id, loser, f"{loser} in the timeout battle from {attacker} to {defender}", 600)
+            broadcaster_id, self.__moderator_id, loser, f"{loser.user_name} in the timeout battle from {attacker.user_name} to {defender.user_name}", 600)
         self.__twitch_api.update_redemption_status(
             broadcaster_id, reward_id, [self.__timeout_reward_id], self.__fullfilled)
 

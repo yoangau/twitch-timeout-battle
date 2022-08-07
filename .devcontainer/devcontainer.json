@@ -2,18 +2,18 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.202.3/containers/python-3
 {
   "name": "Python 3",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "..",
-    "args": {
-      // Update 'VARIANT' to pick a Python version: 3, 3.9, 3.8, 3.7, 3.6.
-      // Append -bullseye or -buster to pin to an OS version.
-      // Use -bullseye variants on local on arm64/Apple Silicon.
-      "VARIANT": "3.7-bullseye",
-      // Options
-      "NODE_VERSION": "lts/*"
-    }
-  },
+  //   "build": {
+  //     "dockerfile": "Dockerfile",
+  //     "context": "..",
+  //     "args": {
+  //       // Update 'VARIANT' to pick a Python version: 3, 3.9, 3.8, 3.7, 3.6.
+  //       // Append -bullseye or -buster to pin to an OS version.
+  //       // Use -bullseye variants on local on arm64/Apple Silicon.
+  //       "VARIANT": "3.7-bullseye",
+  //       // Options
+  //       "NODE_VERSION": "lts/*"
+  //     }
+  //   },
 
   // Configure tool-specific properties.
   "customizations": {
@@ -46,8 +46,17 @@
     }
   },
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [9000],
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+
+  "service": "twitchtimeoutbattle",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  //   "mounts": [
+  //     "source=/local/source/path/goes/here,target=/target/path/in/container/goes/here,type=bind,consistency=cached"
+  //   ],
+
+//   Use 'forwardPorts' to make a list of ports inside the container available locally.
+//   "forwardPorts": [80, 443],
 
   // Use 'portsAttributes' to set default properties for specific forwarded ports. More info: https://code.visualstudio.com/docs/remote/devcontainerjson-reference.
   "portsAttributes": {
@@ -63,7 +72,7 @@
   // },
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "pip3 install -r requirements.txt && mkdir -p db",
+  "postCreateCommand": "cd /workspace/twitchtimeoutbattle && pip3 install -r requirements.txt && mkdir -p db",
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "vscode"
