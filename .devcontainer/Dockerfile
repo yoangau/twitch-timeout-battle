@@ -29,3 +29,8 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
+
+# [Optional] If supported architecture (not arm linux) uncomment this
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin"
+RUN brew install twitchdev/twitch/twitch-cli 
