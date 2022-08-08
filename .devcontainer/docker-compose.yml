@@ -33,6 +33,7 @@ services:
     labels:
       - traefik.enable=true
 
+      # Server
       - traefik.http.routers.twitchtimeoutbattle.rule=Host(`twitchtimeoutbattle.${DOMAIN_NAME}`)
       - traefik.http.routers.twitchtimeoutbattle.tls.certresolver=leresolver
       - traefik.http.routers.twitchtimeoutbattle.entrypoints=websecure
@@ -41,13 +42,23 @@ services:
       - traefik.http.services.twitchtimeoutbattle.loadbalancer.server.port=5000
 
       
+      # Wehooks
       - traefik.http.routers.twitchtimeoutbattlesocket.rule=Host(`twitchtimeoutbattlesocket.${DOMAIN_NAME}`)
       - traefik.http.routers.twitchtimeoutbattlesocket.tls.certresolver=leresolver
       - traefik.http.routers.twitchtimeoutbattlesocket.entrypoints=websecure
       
       - traefik.http.routers.twitchtimeoutbattlesocket.service=twitchtimeoutbattlesocket
       
-      - traefik.http.services.twitchtimeoutbattlesocket.loadbalancer.server.port=5001
+      - traefik.http.services.twitchtimeoutbattlesocket.loadbalancer.server.port=443
+      
+      # Oauth
+      - traefik.http.routers.twitchtimeoutbattleoauth.rule=Host(`twitchtimeoutbattleoauth.${DOMAIN_NAME}`)
+      - traefik.http.routers.twitchtimeoutbattleoauth.tls.certresolver=leresolver
+      - traefik.http.routers.twitchtimeoutbattleoauth.entrypoints=websecure
+      
+      - traefik.http.routers.twitchtimeoutbattleoauth.service=twitchtimeoutbattleoauth
+      
+      - traefik.http.services.twitchtimeoutbattleoauth.loadbalancer.server.port=17563
       # Uncomment the next line to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker-compose for details.
       # - /var/run/docker.sock:/var/run/docker.sock 
 
@@ -60,3 +71,6 @@ services:
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"
  
+networks:
+  reverse_proxy:
+    external: true

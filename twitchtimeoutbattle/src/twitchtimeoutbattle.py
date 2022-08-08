@@ -32,7 +32,6 @@ class TwitchTimeoutBattle:
 
     def unsubscribe(self):
         self.__twitch_hook.unsubscribe_all()
-        self.__twitch_hook.stop()
 
     def __roulette(self, data):
         broadcaster_id, reward_id, user_id, user_name = self.__parse_data(data)

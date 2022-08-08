@@ -35,4 +35,4 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin"
 RUN brew install twitchdev/twitch/twitch-cli 
 RUN mkdir /workspace
-WORKDIR /workspace
+WORKDIR /workspace/twitchtimeoutbattle
